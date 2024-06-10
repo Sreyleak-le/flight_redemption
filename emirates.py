@@ -13,12 +13,16 @@ from selenium.webdriver.chrome.service import Service
 import time
 import random
 import os
+import datetime
+import csv
+
+# TODO don't rely on xpath
 
 #initialize the webdriver
 user_agent_list = \
     ['Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-     'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/124.0.6367.111 Mobile/15E148 Safari/604.1',
+     #'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/124.0.6367.111 Mobile/15E148 Safari/604.1',
     ]
 
 proxy_list = [
@@ -100,7 +104,7 @@ def logIn() :
     )
     type_with_delay(username_textfield, em_username)
     #input password to the text field
-    time.sleep(1)
+    time.sleep(5)
     password_textfield = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located(
             (By.XPATH, "/html/body/div[1]/main/div[2]/div/div/div/div[1]/section/form/div[2]/span/span/input"))
@@ -165,7 +169,7 @@ def logIn() :
     time.sleep(10)
 
 
-def run_emerate():
+def run_emirates():
     if not alreadyLoggedIn():
         logIn()
     else:
@@ -174,20 +178,33 @@ def run_emerate():
 
 
 
-def origin_insertion ():
-    clear_default_origin_btn = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located(
-            (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[1]/div/div[1]/div/div/div[1]/div/button"))
-    )
-    clear_default_origin_btn.click()
+def origin_insertion():
+    try:
+        print("finding initial button")
+        WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[1]/div/div[1]/div/div/div[1]/div/button")
+            )
+        ).click()
+        print("clicked")
+    except:
+        # likely autopopulated
+        print("caught error")
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[1]/div/div[1]/div/div/div[1]/div/input")
+            )
+        ).click()
+
 
     origin_txt_field = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located(
             (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[1]/div/div[1]/div/div/div[1]/div/input"))
     )
     origin_txt_field.clear
-    origin_txt_field.send_keys("houston")
-    time.sleep(10)
+    #origin_txt_field.send_keys("houston")
+    type_with_delay(origin_txt_field, "houston")
+    time.sleep(2)
 
 
 def select_dropdown_menu_origin():
@@ -196,7 +213,7 @@ def select_dropdown_menu_origin():
             (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[1]/div/div[1]/div/div/div[2]/section/ol/li/div"))
     )
     origin_dropdown_selection.click()
-    time.sleep(10)
+    time.sleep(2)
 
 
 
@@ -205,8 +222,9 @@ def destination_insertion () :
         EC.presence_of_element_located(
             (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[1]/div/div[2]/div/div/div[1]/div/input"))
     )
-    destination_txt_field.send_keys("singapore")
-    time.sleep(10)
+    #destination_txt_field.send_keys("singapore")
+    type_with_delay(destination_txt_field, "singapore")
+    time.sleep(2)
 
 def select_dropdown_menu_destination() :
     destination_dropdown_selection= WebDriverWait(driver, 10).until(
@@ -214,26 +232,157 @@ def select_dropdown_menu_destination() :
             (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[1]/div/div[2]/div/div/div[2]/section/ol/li/div"))
     )
     destination_dropdown_selection.click()
-    time.sleep(10)
+    time.sleep(2)
 
-"""def select_departure_date() :
-    select_departure_date= WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located(
-            (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[3]/eol-datefield/div[1]/div[1]/input"))
-    )
-    select_departure_date.click() #click on the textfield so that the calendar popup
 
-    date_picker= WebDriverWait(driver, 10).until(
+
+def select_departure_date():
+    next_button = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located(
-            (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[3]/eol-datefield/eol-calendar/div/div"))
+            (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[3]/eol-datefield/eol-calendar/div/div/div[3]/div/button"))
     )
 
-    desired_date = "04-2025-03"
-    date_element = date_picker.find_element_by_xpath(f"//td[@data-date='{desired_date}']")
-    date_element.click()
+    prev_button = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located(
+            (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[3]/eol-datefield/eol-calendar/div/div/div[2]/div/button"))
+    )
+
     
+    # click one way if not already selected
+    try:
+        text = WebDriverWait(driver, 2).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[3]/eol-datefield/div[1]/div[2]/label/span[2]"))
+        ).text
+        if text != 'Add Return':
+            WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+                (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[3]/eol-datefield/eol-calendar/div/div/div[1]/div/label[2]/input"))
+            ).click()
+            time.sleep(1)
+    except:
+        pass
+
+    # cycle through calendar until target date appears
+    target_year = 2024
+    target_month = 'August'
+    target_day = '21'
+
+    while True:
+        # TODO add validation for invalid dates
+
+        display_month_left = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[3]/eol-datefield/eol-calendar/div/div/div[2]/div/div[1]")
+            )
+        ).text
+
+        display_year_left = int(WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[3]/eol-datefield/eol-calendar/div/div/div[2]/div/div[2]")
+            )
+        ).text)
+
+        display_month_right = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[3]/eol-datefield/eol-calendar/div/div/div[3]/div/div[1]")
+            )
+        ).text
+
+        display_year_right = int(WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[3]/eol-datefield/eol-calendar/div/div/div[3]/div/div[2]")
+            )
+        ).text)
+
+        if (display_month_left == target_month and display_year_left == target_year) or (display_month_right == target_month and display_year_right == target_year):
+            break
+
+        elif (display_year_right < target_year or display_year_right == target_year and display_month_right != target_month):
+            next_button.click()
+        else:
+            prev_button.click()
+
+
+    months = {
+        "January": 0,
+        "February": 1,
+        "March": 2,
+        "April": 3,
+        "May": 4,
+        "June": 5,
+        "July": 6,
+        "August": 7,
+        "September": 8,
+        "October": 9,
+        "Novermber": 10,
+        "December": 11,
+    }
+    date_selector = f'button[data-month="{months[target_month]}"][data-year="{target_year}"][data-date="{target_day}"]'
+        
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located(
+            (By.CSS_SELECTOR, date_selector)
+        )
+    ).click()
+
+    time.sleep(3)
+
+    #click for mileage redemption
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located(
+            (By.ID, "search-flight__rewards_checkbox"))
+        ).click()
+
+    # search flights
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located(
+            (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[2]/div[3]/form/button"))
+        ).click()
+
+    time.sleep(30)
+'''
+def turn_mileage_on():
+    mileage_checkbox = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located(
+                    (By.ID, "dvPoMiles"))
+            )
+    is_checked = mileage_checkbox.is_selected()
+    if not is_checked:
+        mileage_checkbox.click()
+        print("it is on now")
+
     time.sleep(10)
-"""
+'''
+'''#click continue once the result out
+    continue_btn = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located(
+            (By.ID, "ctl00_c_btnContinue"))
+        ).click()
+    print(" the continue")
+'''
+    
+
+def scrape_and_save():
+    result_calss = 'ts-fbr-flight-list__body'
+    div_elements = WebDriverWait(driver, 10).until(
+        EC.presence_of_all_elements_located(
+            (By.CSS_SELECTOR, f'.{result_calss} > div'))
+    )
+    print(len(div_elements))
+    for flight in div_elements:
+        div_text = flight.text 
+        print(div_text)
+
+    div_texts = [div.text for div in div_elements]
+
+    with open('div_text.csv', 'w',newline= '', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow(['The avialable flights with mileage'])  # Write the header
+        for div in div_texts:
+            writer.writerow([div])  
+
+
+
 
 
 """def serching () :
@@ -246,10 +395,7 @@ def select_dropdown_menu_destination() :
     time.sleep(60)
 """
 
-"""
-#function to select the departure date and return date
 
-"""
 
 
 
