@@ -1,0 +1,5 @@
+Flight Option,Departing Airport,Departure Date,Aircraft 1,Flight Number 1,Aircraft 2,Flight Number 2,Departure Airport Code,Departure Time,Arrival Airport Code,Arrival Time,Duration,Connections,Class,Miles,Price (USD),Availability,Business Class Miles,Business Class Price (USD),Business Availability
+1:,George Bush Intercontinental Airport,01,A380,EK212,B777,EK404,IAH,19:55,SIN,08:50 +2,23 hrs 55 mins,1 connection,Economy,"42,500",311.60,"Lowest price, Insufficient Miles","167,500","1,254.60",Insufficient Miles
+2:,George Bush Intercontinental Airport,02,A380,EK212,B777,EK348,IAH,19:55,SIN,14:05 +2,29 hrs 10 mins,1 connection,Economy,"42,500",311.60,"Lowest price, Insufficient Miles","167,500","1,254.60",Insufficient Miles
+3:,George Bush Intercontinental Airport,03,A380,EK212,A380,EK354,IAH,19:55,SIN,15:00 +2,30 hrs 5 mins,1 connection,Economy,"42,500",311.60,"Lowest price, Insufficient Miles","167,500","1,254.60",Insufficient Miles
+4:,George Bush Intercontinental Airport,04,A380,EK212,A380,EK352,IAH,19:55,SIN,21:45 +2,36 hrs 50 mins,1 connection,Economy,"42,500",311.60,"Lowest price, Insufficient Miles","167,500","1,254.60",Insufficient Miles
