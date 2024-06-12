@@ -368,32 +368,87 @@ def scrape_and_save():
         EC.presence_of_all_elements_located(
             (By.CSS_SELECTOR, f'.{result_calss} > div'))
     )
-    print(len(div_elements))
     for flight in div_elements:
         div_text = flight.text 
         print(div_text)
 
-    div_texts = [div.text for div in div_elements]
+    raw_div_texts = [div.text for div in div_elements]
+    raw_text = '\n'.join(raw_div_texts)
 
-    with open('div_text.csv', 'w',newline= '', encoding='utf-8') as file:
-        writer = csv.writer(file)
-        writer.writerow(['The avialable flights with mileage'])  # Write the header
-        for div in div_texts:
-            writer.writerow([div])  
+    flight_options_raw = raw_text.split('Flight option')[1:]
+    flight_options = []
+    for option in flight_options_raw:
+        lines = option.split('\n')
+        lines = [line.strip() for line in lines if line.strip()]
+        
+        flight_option = lines[0].split()[0]
+        departing_airport = "George Bush Intercontinental Airport"
+        departure_date = lines[1]
+        aircraft_1 = lines[2]
+        flight_number_1 = lines[3]
+        aircraft_2 = lines[4]
+        flight_number_2 = lines[5]
+        departure_airport_code = lines[6]
+        departure_time = lines[7]
+        arrival_airport_code = lines[8]
+        arrival_time = lines[9]
+        duration = lines[10]
+        connections = lines[11]
+        
+        economy_class = "Economy"
+        economy_miles = lines[13].split()[1]
+        economy_price = lines[14].split()[1]
+        economy_availability = ", ".join(lines[15:17])
+        
+        business_class = "Business"
+        business_miles = lines[18].split()[1]
+        business_price = lines[19].split()[1]
+        business_availability = lines[20]
+
+
+        flight_options.append({
+        "Flight Option": flight_option,
+        "Departing Airport": departing_airport,
+        "Departure Date": departure_date,
+        "Aircraft 1": aircraft_1,
+        "Flight Number 1": flight_number_1,
+        "Aircraft 2": aircraft_2,
+        "Flight Number 2": flight_number_2,
+        "Departure Airport Code": departure_airport_code,
+        "Departure Time": departure_time,
+        "Arrival Airport Code": arrival_airport_code,
+        "Arrival Time": arrival_time,
+        "Duration": duration,
+        "Connections": connections,
+        "Class": economy_class,
+        "Miles": economy_miles,
+        "Price (USD)": economy_price,
+        "Availability": economy_availability,
+        "Business Class Miles": business_miles,
+        "Business Class Price (USD)": business_price,
+        "Business Availability": business_availability
+        })
+    print(flight_options)
+
+
+
+    header = [
+    "Flight Option", "Departing Airport", "Departure Date", "Aircraft 1", "Flight Number 1",
+    "Aircraft 2", "Flight Number 2", "Departure Airport Code", "Departure Time", 
+    "Arrival Airport Code", "Arrival Time", "Duration", "Connections", "Class", "Miles", 
+    "Price (USD)", "Availability", "Business Class Miles", "Business Class Price (USD)", 
+    "Business Availability"
+    ]
+
+    with open('flight_options.csv', 'w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=header)
+        writer.writeheader()
+        for flight in flight_options:
+            writer.writerow(flight)
 
 
 
 
-
-"""def serching () :
-    searching_btn = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located(
-            (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[2]/div[3]/form/button/span"))
-    )
-    searching_btn.click()
-
-    time.sleep(60)
-"""
 
 
 
