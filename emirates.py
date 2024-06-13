@@ -381,9 +381,8 @@ def scrape_and_save():
         lines = option.split('\n')
         lines = [line.strip() for line in lines if line.strip()]
         
-        flight_option = lines[0].split()[0]
-        departing_airport = "George Bush Intercontinental Airport"
-        departure_date = lines[1]
+        flight_option = lines[0].replace(':', '').split()[0].strip()
+        departing_airport = lines[0][(lines[0].find('Departing') + len('Departing')):]
         aircraft_1 = lines[2]
         flight_number_1 = lines[3]
         aircraft_2 = lines[4]
@@ -409,7 +408,6 @@ def scrape_and_save():
         flight_options.append({
         "Flight Option": flight_option,
         "Departing Airport": departing_airport,
-        "Departure Date": departure_date,
         "Aircraft 1": aircraft_1,
         "Flight Number 1": flight_number_1,
         "Aircraft 2": aircraft_2,
@@ -433,7 +431,7 @@ def scrape_and_save():
 
 
     header = [
-    "Flight Option", "Departing Airport", "Departure Date", "Aircraft 1", "Flight Number 1",
+    "Flight Option", "Departing Airport", "Aircraft 1", "Flight Number 1",
     "Aircraft 2", "Flight Number 2", "Departure Airport Code", "Departure Time", 
     "Arrival Airport Code", "Arrival Time", "Duration", "Connections", "Class", "Miles", 
     "Price (USD)", "Availability", "Business Class Miles", "Business Class Price (USD)", 
