@@ -61,6 +61,9 @@ options.add_argument('--disable-web-security')
 # options.add_experimental_option("excludeSwitches", ["enable-automation"])
 # driver.maximize_window()
 
+# cycle through calendar until target date appears
+
+
 driver = webdriver.Chrome(options=options, service=ChromeService(ChromeDriverManager().install()))
 
 # TODO make cookies a custom option (if needed)
@@ -70,6 +73,10 @@ driver = webdriver.Chrome(options=options, service=ChromeService(ChromeDriverMan
 # cookie2 = {'name': 'cookie_name2', 'value': 'cookie_value2'}
 # driver.add_cookie(cookie1)
 # driver.add_cookie(cookie2)
+
+target_year = 2024
+target_month = 'August'
+target_day = '21'
 
 driver.get("https://accounts.emirates.com/us/english/sso/login?clientId=5kZbI1Xknmwp569KaEpn7urgUh5dJMsu&state=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWxsYmFja1VybCI6Ii91cy9lbmdsaXNoLz9sb2dvdXQ9dHJ1ZSIsInB1YiI6InVzL2VuZ2xpc2giLCJ1bmlxSWQiOiJlZjQ5MDkxMiIsIm5vUHJvZmlsZSI6MX0.A6-zEV8VV2Px1WgVDUOH77WhnBkd2k-7-GMra6ru3TA")
 
@@ -262,10 +269,7 @@ def select_departure_date():
     except:
         pass
 
-    # cycle through calendar until target date appears
-    target_year = 2024
-    target_month = 'August'
-    target_day = '21'
+
 
     while True:
         # TODO add validation for invalid dates
@@ -340,27 +344,7 @@ def select_departure_date():
         ).click()
 
     time.sleep(30)
-'''
-def turn_mileage_on():
-    mileage_checkbox = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located(
-                    (By.ID, "dvPoMiles"))
-            )
-    is_checked = mileage_checkbox.is_selected()
-    if not is_checked:
-        mileage_checkbox.click()
-        print("it is on now")
-
-    time.sleep(10)
-'''
-'''#click continue once the result out
-    continue_btn = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located(
-            (By.ID, "ctl00_c_btnContinue"))
-        ).click()
-    print(" the continue")
-'''
-    
+   
 
 def scrape_and_save():
     result_calss = 'ts-fbr-flight-list__body'
@@ -394,12 +378,12 @@ def scrape_and_save():
         duration = lines[10]
         connections = lines[11]
         
-        economy_class = "Economy"
+        economy_class = lines[12]
         economy_miles = lines[13].split()[1]
         economy_price = lines[14].split()[1]
         economy_availability = ", ".join(lines[15:17])
         
-        business_class = "Business"
+        business_class = lines[17]
         business_miles = lines[18].split()[1]
         business_price = lines[19].split()[1]
         business_availability = lines[20]
@@ -408,6 +392,7 @@ def scrape_and_save():
         flight_options.append({
         "Flight Option": flight_option,
         "Departing Airport": departing_airport,
+        "Departure Date": str(target_month) + " " + str(target_day) + ", " + str(target_year),
         "Aircraft 1": aircraft_1,
         "Flight Number 1": flight_number_1,
         "Aircraft 2": aircraft_2,
@@ -418,10 +403,11 @@ def scrape_and_save():
         "Arrival Time": arrival_time,
         "Duration": duration,
         "Connections": connections,
-        "Class": economy_class,
+        "Class 1": economy_class,
         "Miles": economy_miles,
         "Price (USD)": economy_price,
         "Availability": economy_availability,
+        "Class 2": business_class,
         "Business Class Miles": business_miles,
         "Business Class Price (USD)": business_price,
         "Business Availability": business_availability
@@ -431,10 +417,10 @@ def scrape_and_save():
 
 
     header = [
-    "Flight Option", "Departing Airport", "Aircraft 1", "Flight Number 1",
+    "Flight Option", "Departing Airport","Departure Date", "Aircraft 1", "Flight Number 1",
     "Aircraft 2", "Flight Number 2", "Departure Airport Code", "Departure Time", 
-    "Arrival Airport Code", "Arrival Time", "Duration", "Connections", "Class", "Miles", 
-    "Price (USD)", "Availability", "Business Class Miles", "Business Class Price (USD)", 
+    "Arrival Airport Code", "Arrival Time", "Duration", "Connections", "Class 1", "Miles", 
+    "Price (USD)", "Availability","Class 2", "Business Class Miles", "Business Class Price (USD)", 
     "Business Availability"
     ]
 
