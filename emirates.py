@@ -15,6 +15,7 @@ import random
 import os
 import datetime
 import csv
+import re
 
 # TODO don't rely on xpath
 
@@ -76,7 +77,7 @@ driver = webdriver.Chrome(options=options, service=ChromeService(ChromeDriverMan
 
 target_year = 2024
 target_month = 'August'
-target_day = '21'
+target_day = '23'
 
 driver.get("https://accounts.emirates.com/us/english/sso/login?clientId=5kZbI1Xknmwp569KaEpn7urgUh5dJMsu&state=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjYWxsYmFja1VybCI6Ii91cy9lbmdsaXNoLz9sb2dvdXQ9dHJ1ZSIsInB1YiI6InVzL2VuZ2xpc2giLCJ1bmlxSWQiOiJlZjQ5MDkxMiIsIm5vUHJvZmlsZSI6MX0.A6-zEV8VV2Px1WgVDUOH77WhnBkd2k-7-GMra6ru3TA")
 
@@ -210,7 +211,7 @@ def origin_insertion():
     )
     origin_txt_field.clear
     #origin_txt_field.send_keys("houston")
-    type_with_delay(origin_txt_field, "houston")
+    type_with_delay(origin_txt_field, "DFW")
     time.sleep(2)
 
 
@@ -230,7 +231,7 @@ def destination_insertion () :
             (By.XPATH, "/html/body/main/div[2]/div/div/div[1]/div/div/div/div[2]/section/div[4]/div[1]/div[1]/div/div[2]/div/div/div[1]/div/input"))
     )
     #destination_txt_field.send_keys("singapore")
-    type_with_delay(destination_txt_field, "singapore")
+    type_with_delay(destination_txt_field, "phnom penh")
     time.sleep(2)
 
 def select_dropdown_menu_destination() :
@@ -352,83 +353,69 @@ def scrape_and_save():
         EC.presence_of_all_elements_located(
             (By.CSS_SELECTOR, f'.{result_calss} > div'))
     )
+    data = ""
     for flight in div_elements:
         div_text = flight.text 
-        print(div_text)
+        data += div_text
+        print(data)
 
-    raw_div_texts = [div.text for div in div_elements]
-    raw_text = '\n'.join(raw_div_texts)
+    
 
-    flight_options_raw = raw_text.split('Flight option')[1:]
+    lines = data.split('\n')
+    lines = [line.strip() for line in lines if line.strip()]
+
     flight_options = []
-    for option in flight_options_raw:
-        lines = option.split('\n')
-        lines = [line.strip() for line in lines if line.strip()]
-        
-        flight_option = lines[0].replace(':', '').split()[0].strip()
-        departing_airport = lines[0][(lines[0].find('Departing') + len('Departing')):]
-        aircraft_1 = lines[2]
-        flight_number_1 = lines[3]
-        aircraft_2 = lines[4]
-        flight_number_2 = lines[5]
-        departure_airport_code = lines[6]
-        departure_time = lines[7]
-        arrival_airport_code = lines[8]
-        arrival_time = lines[9]
-        duration = lines[10]
-        connections = lines[11]
-        
-        economy_class = lines[12]
-        economy_miles = lines[13].split()[1]
-        economy_price = lines[14].split()[1]
-        economy_availability = ", ".join(lines[15:17])
-        
-        business_class = lines[17]
-        business_miles = lines[18].split()[1]
-        business_price = lines[19].split()[1]
-        business_availability = lines[20]
+    patterns = {
+        'Flight Option': r'^Flight option (\d+): Departing (.+)$',
+        'Flight Number 1': r'^(\d{2,3})$',
+        'Aircraft 1': r'^(.+)$',
+        'Flight Number 2': r'^(\d{2,3})$',
+        'Aircraft 2': r'^(.+)$',
+        'Departure Airport Code': r'^([A-Z]+)$',
+        'Departure Time': r'^(\d{2}:\d{2})$',
+        'Arrival Airport Code': r'^([A-Z]+)$',
+        'Arrival Time': r'^(\d{2}:\d{2} \+\d)$',
+        'Duration': r'^([\d\s\w]+)$',
+        'Connections': r'^([\d\s\w,]+)$',
+        'Economy Class': r'^Economy$',
+        'Economy Miles': r'^from (\d{1,3}(?:,\d{3})*).+\+$',
+        'Economy Price (USD)': r'^USD (\d+(\.\d+)?)$',
+        'Economy Availability': r'^([a-zA-Z\s]+)$',
+        'Business Class': r'^Business$',
+        'Business Miles': r'^from (\d{1,3}(?:,\d{3})*).+\+$',
+        'Business Price (USD)': r'^USD (\d+(\.\d+)?)$',
+        'Business Availability': r'^([a-zA-Z\s]+)$',
+        'First Class': r'^First$',
+        'First Miles': r'^from (\d{1,3}(?:,\d{3})*).+\+$',
+        'First Price (USD)': r'^USD (\d+(\.\d+)?)$',
+        'First Availability': r'^([a-zA-Z\s]+)$',
+    }
 
 
-        flight_options.append({
-        "Flight Option": flight_option,
-        "Departing Airport": departing_airport,
-        "Departure Date": str(target_month) + " " + str(target_day) + ", " + str(target_year),
-        "Aircraft 1": aircraft_1,
-        "Flight Number 1": flight_number_1,
-        "Aircraft 2": aircraft_2,
-        "Flight Number 2": flight_number_2,
-        "Departure Airport Code": departure_airport_code,
-        "Departure Time": departure_time,
-        "Arrival Airport Code": arrival_airport_code,
-        "Arrival Time": arrival_time,
-        "Duration": duration,
-        "Connections": connections,
-        "Class 1": economy_class,
-        "Miles": economy_miles,
-        "Price (USD)": economy_price,
-        "Availability": economy_availability,
-        "Class 2": business_class,
-        "Business Class Miles": business_miles,
-        "Business Class Price (USD)": business_price,
-        "Business Availability": business_availability
-        })
-    print(flight_options)
-
-
+    for div_element in div_elements:
+        flight_data = {}
+        div_text = div_element.text.split('\n')
+        for line in div_text:
+            for key, pattern in patterns.items():
+                match = re.match(pattern, line)
+                if match:
+                    flight_data[key] = match.group(1)
+                    break
+        flight_options.append(flight_data)
 
     header = [
-    "Flight Option", "Departing Airport","Departure Date", "Aircraft 1", "Flight Number 1",
-    "Aircraft 2", "Flight Number 2", "Departure Airport Code", "Departure Time", 
-    "Arrival Airport Code", "Arrival Time", "Duration", "Connections", "Class 1", "Miles", 
-    "Price (USD)", "Availability","Class 2", "Business Class Miles", "Business Class Price (USD)", 
-    "Business Availability"
+        "Flight Option", "Departing Airport", "Flight Number 1", "Aircraft 1",
+        "Flight Number 2", "Aircraft 2", "Departure Airport Code", "Departure Time",
+        "Arrival Airport Code", "Arrival Time", "Duration", "Connections",
+        "Economy Class", "Economy Miles", "Economy Price (USD)", "Economy Availability",
+        "Business Class", "Business Miles", "Business Price (USD)", "Business Availability",
+        "First Class", "First Miles", "First Price (USD)", "First Availability"
     ]
 
     with open('flight_options.csv', 'w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=header)
         writer.writeheader()
-        for flight in flight_options:
-            writer.writerow(flight)
+        writer.writerows(flight_options)
 
 
 
